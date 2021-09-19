@@ -16,9 +16,9 @@ public class Lwjgl3Launcher {
 
 	private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
 		Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
-		configuration.setTitle("tethyszero");
-		configuration.setWindowedMode(640, 480);
-		configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
+		configuration.setTitle("Tethys Z.E.R.O.");
+		configuration.setWindowedMode(800, 800);
+		configuration.setWindowIcon("logo128.png", "logo64.png", "logo32.png", "logo16.png");
 		return configuration;
 	}
 }

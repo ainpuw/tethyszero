@@ -31,9 +31,7 @@ public class StartScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-        // TODO: Add a square rolling animation.
-        font.draw(game.batch, "Wheel Square Wheel", 100, 150);
-        font.draw(game.batch, "Tap anywhere to begin!", 100, 100);
+        font.draw(game.batch, "Tethys Z.E.R.O.", 100, 150);
         game.batch.end();
 
         if (Gdx.input.isTouched()) {
