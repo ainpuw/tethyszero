@@ -22,11 +22,14 @@ public class GameConfig {
     public final int tileLen = 32;
 
     // The time interval to make one step in the game.
-    public final float playerDT = 0.0f;
-    public final float explosionDT = 0.1f;
+    public final float playerDT = 0.01f;
+    public final float explosionDT = 0.01f;
 
     public Array<int[]> spawns = new Array<>();
     public final int nSpawns;
+
+    // Need this number of units in a connected rectangular region to cancel.
+    public int cancelThreshold = 5;
 
     public GameConfig() {
         // 28 spawning blocks in total.
