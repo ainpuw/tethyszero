@@ -31,6 +31,7 @@ public class GameScreen implements Screen {
     private int rotationAction = 0;
     private boolean playerRotation = false;
     private float cumulativeTime;
+    private int wait = 0;
 
     public GameScreen(final Main game) {
         config = game.config;
@@ -71,7 +72,11 @@ public class GameScreen implements Screen {
             speedAction = resolveSpeedAction();
             rotationAction = resolveRotationAction();
             cumulativeTime = 0;
-            step();
+
+            if (wait > 0)
+                wait--;
+            else
+                step();
         }
 
 
@@ -125,16 +130,25 @@ public class GameScreen implements Screen {
         }
 
         if (globalZeroSpeed) {
+            // TODO: NEED TO DELETE THIS BLOCK.
+            for (int i = 0; i < playground.getWidth(); i++) {
+                for (int j = 0; j < playground.getHeight(); j++) {
+                    playground.getCell(i, j).setTile(map.getTileSets().getTile(config.clearTileId));
+                }
+            }
+            // TODO: NEED TO DELETE THIS BLOCK.
+
             // First, check if we can cancel anything.
             // If a region is canceled, initialize explosion phase.
             if (cancelMaxConnectedRegion()) {
                 exploding = true;
+                wait = 30;  // Show the explosion.
             }
             // If nothing can be canceled, generate a new block.
             else {
                 exploding = false;
                 Block newBlock = new Block(config.spawns.get(Utils.rand(0, config.nSpawns - 1)),
-                        Utils.randSpeed(), Utils.randPower(), Utils.randTile());
+                        Utils.randSpeed(), Utils.randPower());
                 for (int i = 0; i < blocks.size - 1; i++) {
                     if (newBlock.overlap(blocks.get(i)))
                         System.out.println("GAME OVER");
@@ -167,7 +181,9 @@ public class GameScreen implements Screen {
         // Clear the playground.
         for (int i = 0; i < playground.getWidth(); i++) {
             for (int j = 0; j < playground.getHeight(); j++) {
-                playground.getCell(i, j).setTile(map.getTileSets().getTile(2));
+                // TODO: NEED TO DELETE THIS IF.
+                if (playground.getCell(i, j).getTile().getId() != config.opaqueTileId)
+                    playground.getCell(i, j).setTile(map.getTileSets().getTile(config.clearTileId));
             }
         }
 
@@ -176,7 +192,7 @@ public class GameScreen implements Screen {
             Block b = blocks.get(i);
             for (int j = 0; j < b.n; j++) {
                 TiledMapTileLayer.Cell cell = playground.getCell(b.shape[j * 2], b.shape[j * 2 + 1]);
-                cell.setTile(map.getTileSets().getTile(b.tileId));
+                cell.setTile(map.getTileSets().getTile(b.tileId[j]));
             }
         }
     }
@@ -294,32 +310,30 @@ public class GameScreen implements Screen {
         int miny = result[2];
         int maxx = result[3];
         int maxy = result[4];
-        int cx = (maxx - minx) / 2 + minx;
-        int cy = (maxy - miny) / 2 + miny;
         for (Block b : blocks) {
             int[] center = b.getCenter();
             int bx = center[0];
             int by = center[1];
-            // Very coarse grained.
-            Vector2 direction = new Vector2(bx - cx, by - cy);
-            float deg = direction.angleDeg();
-            if (deg >= 337.5 || deg < 22.5)
-                b.speed = Speed.RIGHT;
-            else if (deg >= 22.5 && deg < 67.5)
-                b.speed = Speed.UPRIGHT;
-            else if (deg >= 67.5 && deg < 112.5)
+            if (bx < minx) {
+                if (by > maxy)
+                    b.speed = Speed.UPLEFT;
+                else if (by < miny)
+                    b.speed = Speed.DOWNLEFT;
+                else
+                    b.speed = Speed.LEFT;
+            }
+            else if (bx > maxx) {
+                if (by > maxy)
+                    b.speed = Speed.UPRIGHT;
+                else if (by < miny)
+                    b.speed = Speed.DOWNRIGHT;
+                else
+                    b.speed = Speed.RIGHT;
+            }
+            else if (by > maxy)
                 b.speed = Speed.UP;
-            else if (deg >= 112.5 && deg < 157.5)
-                b.speed = Speed.UPLEFT;
-            else if (deg >= 157.5 && deg < 202.5)
-                b.speed = Speed.LEFT;
-            else if (deg >= 202.5 && deg < 247.5)
-                b.speed = Speed.DOWNLEFT;
-            else if (deg >= 247.5 && deg < 292.5)
+            else
                 b.speed = Speed.DOWN;
-            else  // if (deg >= 292.5 && deg < 337.5)
-                b.speed = Speed.DOWNRIGHT;
-
         }
 
         return true;
@@ -343,6 +357,9 @@ public class GameScreen implements Screen {
                 survivingUnits[2 * survivingN + 1] = y;
                 survivingN++;
             }
+            else
+                // TODO: NEED TO DELETE THIS.
+                playground.getCell(x, y).setTile(map.getTileSets().getTile(config.opaqueTileId));
         }
         if (survivingN == b.n) {
             smallBlocks.add(b);
@@ -381,7 +398,7 @@ public class GameScreen implements Screen {
             int [] coords = new int[island.size];
             for (int i = 0 ; i < island.size; i++)
                 coords[i] = island.get(i);
-            Block islandBlock = new Block(coords, Speed.ZERO, b.power, b.tileId);
+            Block islandBlock = new Block(coords, Speed.ZERO, b.power);
             smallBlocks.add(islandBlock);
         }
 

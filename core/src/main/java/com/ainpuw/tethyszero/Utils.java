@@ -41,9 +41,6 @@ public class Utils {
         else
             return Power.O;
     }
-    public static int randTile() {
-        return rand(11, 17);
-    }
 
     public static int [] maxRectangle(int[][] matrix) {
         int maxArea = 0;

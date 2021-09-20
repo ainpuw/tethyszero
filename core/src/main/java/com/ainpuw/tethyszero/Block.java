@@ -1,21 +1,25 @@
 package com.ainpuw.tethyszero;
 
+import java.util.HashMap;
+
 enum Speed {UP, DOWN, LEFT, RIGHT, UPLEFT, UPRIGHT, DOWNLEFT, DOWNRIGHT, ZERO};
 enum Power {T, Z, E, R, O};
 
 public class Block {
     public int [] shape;
+
     public int n;
     public boolean centerSymmetric;
     public Speed speed;
     public int rotation = 0;  // 0 = no rotation, -1 = left, +1 = right.
     public int [] shapeBeforeRotation;
     public Power power;
-    public int tileId;
+    public int [] tileId;
+    public int tileIdPowerOffset;
     public boolean moved = false;
-    public int remainingActions = 30;
+    public int remainingActions = 30;  // TODO: Not in game config.
 
-    public Block(int [] shape, Speed speed, Power power, int tileId) {
+    public Block(int [] shape, Speed speed, Power power) {
         this.shape = new int[shape.length];
         this.shapeBeforeRotation = new int[shape.length];
         for (int i = 0; i < shape.length; i++) {
@@ -27,7 +31,25 @@ public class Block {
 
         this.speed = speed;
         this.power = power;
-        this.tileId = tileId;
+        switch (this.power) {
+            case T:
+                tileIdPowerOffset = 2;
+                break;
+            case Z:
+                tileIdPowerOffset = 0;
+                break;
+            case E:
+                tileIdPowerOffset = 1;
+                break;
+            case R:
+                tileIdPowerOffset = 3;
+                break;
+            case O:
+                tileIdPowerOffset = 4;
+                break;
+        }
+        this.tileId = new int[n];
+        calculateTileId();
     }
 
     public void move() {
@@ -164,10 +186,12 @@ public class Block {
         }
 
         rotation = 0;
+        calculateTileId();
     }
 
     public void rotateBack() {
         shape = shapeBeforeRotation;
+        calculateTileId();
     }
     public boolean overlap(Block b) {
         // This is a brute force algorithm.
@@ -238,4 +262,26 @@ public class Block {
         return check == 4;
     }
 
+    public void calculateTileId() {
+        HashMap<String, Integer> shapeHashMap = new HashMap<String, Integer>();
+        for (int i = 0; i < n; i++) {
+            int x = shape[i * 2];
+            int y = shape[i * 2 + 1];
+            shapeHashMap.put(String.format("%d-%d", x, y), 1);
+        }
+        for (int i = 0; i < n; i++) {
+            int x = shape[i * 2];
+            int y = shape[i * 2 + 1];
+            String hashCode = "";
+            if (shapeHashMap.containsKey(String.format("%d-%d", x - 1, y))) hashCode += "0";
+            else hashCode += "1";
+            if (shapeHashMap.containsKey(String.format("%d-%d", x, y + 1))) hashCode += "0";
+            else hashCode += "1";
+            if (shapeHashMap.containsKey(String.format("%d-%d", x + 1, y))) hashCode += "0";
+            else hashCode += "1";
+            if (shapeHashMap.containsKey(String.format("%d-%d", x, y - 1))) hashCode += "0";
+            else hashCode += "1";
+            tileId[i] = GameConfig.tileHashMap.get(hashCode) + tileIdPowerOffset;
+        }
+    }
 }
