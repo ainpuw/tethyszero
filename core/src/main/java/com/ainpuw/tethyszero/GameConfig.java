@@ -13,16 +13,16 @@ public class GameConfig {
     public final int wallMinY = 2;
     public final int wallMaxY = 29;
 
-    public final float screenBgR = 128f;
-    public final float screenBgG = 128f;
-    public final float screenBgB = 128f;
+    public final float screenBgR = 255f / 255f;
+    public final float screenBgG = 135f / 255f;
+    public final float screenBgB = 157f / 255f;
     public final float screenBgA = 1f;
 
     public final float camStartPosX = 16f;
     public final float camStartPosY = 16f;
 
     public final int tileLen = 32;
-    public final int clearTileId = 5;
+    public final int clearTileId = 3;
     public final int opaqueTileId = 1;
 
     // The time interval to make one step in the game.
@@ -33,7 +33,10 @@ public class GameConfig {
     public final int nSpawns;
 
     // Need this number of units in a connected rectangular region to cancel.
-    public int cancelThreshold = 6;
+    public final int cancelThreshold = 6;
+
+    public final float tetrazeroAnimationSpeed = 0.4f;
+    public final float clicktostartAnimationSpeed = 0.4f;
 
     public GameConfig() {
         // 28 spawning blocks in total.

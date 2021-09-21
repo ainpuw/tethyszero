@@ -9,7 +9,6 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
@@ -87,7 +86,6 @@ public class GameScreen implements Screen {
         renderer.render();
 
         Batch batch = renderer.getBatch();
-
         batch.begin();
         batch.end();
 
@@ -358,8 +356,9 @@ public class GameScreen implements Screen {
                 survivingN++;
             }
             else
+                ;
                 // TODO: NEED TO DELETE THIS.
-                playground.getCell(x, y).setTile(map.getTileSets().getTile(config.opaqueTileId));
+                // playground.getCell(x, y).setTile(map.getTileSets().getTile(config.opaqueTileId));
         }
         if (survivingN == b.n) {
             smallBlocks.add(b);
