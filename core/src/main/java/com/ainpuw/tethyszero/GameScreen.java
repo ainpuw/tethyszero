@@ -4,7 +4,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -20,6 +23,8 @@ public class GameScreen implements Screen {
     private TiledMap map = new TmxMapLoader().load("map.tmx");;
     private TiledMapTileLayer playground = (TiledMapTileLayer) map.getLayers().get("playground");
     private OrthogonalTiledMapRenderer renderer;
+    Texture destroyTexture = new Texture("destroy_tiles.png");;
+    private Array<Animation<TextureRegion>> destroyAnimations = new Array<>();
 
     private Array<Block> blocks = new Array<>();;
 
@@ -30,7 +35,14 @@ public class GameScreen implements Screen {
     private int rotationAction = 0;
     private boolean playerRotation = false;
     private float cumulativeTime;
+    private float destroyTime = 0;
     private int wait = 0;
+
+    private int totalTilesDestroyed = 0;
+    private int [] currentDestroyedCounters = new int[]{0, 0, 0, 0, 0};
+    private boolean hasMajority = false;
+    private Power majorityPower = Power.T;
+    private int[] destroyRegion = new int[]{};
 
     public GameScreen(final Main game) {
         config = game.config;
@@ -40,6 +52,12 @@ public class GameScreen implements Screen {
         camera.position.y = config.camStartPosY;
 
         renderer = new OrthogonalTiledMapRenderer(map, 1 / (float) config.tileLen);
+
+        TextureRegion[][] destroySprites = TextureRegion.split(destroyTexture, 32, 32);
+        for (int i = 0; i < 6; i++)  // 6 different colors.
+            destroyAnimations.add(new Animation(config.destroyAnimationSpeed,
+                    destroySprites[i][0], destroySprites[i][1], destroySprites[i][2],
+                    destroySprites[i][3], destroySprites[i][4]));
     }
 
     @Override
@@ -79,7 +97,7 @@ public class GameScreen implements Screen {
         }
 
 
-        ScreenUtils.clear(config.screenBgR, config.screenBgG, config.screenBgB, config.screenBgA);
+        ScreenUtils.clear(config.gameScreenBgR, config.gameScreenBgG, config.gameScreenBgB, config.screenBgA);
         camera.update();
 
         renderer.setView(camera);
@@ -87,6 +105,30 @@ public class GameScreen implements Screen {
 
         Batch batch = renderer.getBatch();
         batch.begin();
+
+        // Paint destruction if any.
+        destroyTime += Gdx.graphics.getDeltaTime();
+        for (Block b : blocks) {
+            if (b.toDestroy) {
+                TextureRegion frame;
+                if (!hasMajority || b.power != majorityPower)
+                    frame = destroyAnimations.get(0).getKeyFrame(destroyTime);
+                else {
+                    if (b.power == Power.T)
+                        frame = destroyAnimations.get(1).getKeyFrame(destroyTime);
+                    else if (b.power == Power.Z)
+                        frame = destroyAnimations.get(2).getKeyFrame(destroyTime);
+                    else if (b.power == Power.E)
+                        frame = destroyAnimations.get(3).getKeyFrame(destroyTime);
+                    else if (b.power == Power.R)
+                        frame = destroyAnimations.get(4).getKeyFrame(destroyTime);
+                    else
+                        frame = destroyAnimations.get(5).getKeyFrame(destroyTime);
+                }
+                batch.draw(frame, b.shape[0]-0.25f, b.shape[1]-0.25f, 1.5f, 1.5f);
+            }
+        }
+
         batch.end();
 
     }
@@ -115,6 +157,7 @@ public class GameScreen implements Screen {
     public void dispose() {
         map.dispose();
         renderer.dispose();
+        destroyTexture.dispose();
     }
 
     private void step() {
@@ -128,30 +171,59 @@ public class GameScreen implements Screen {
         }
 
         if (globalZeroSpeed) {
-            // TODO: NEED TO DELETE THIS BLOCK.
-            for (int i = 0; i < playground.getWidth(); i++) {
-                for (int j = 0; j < playground.getHeight(); j++) {
-                    playground.getCell(i, j).setTile(map.getTileSets().getTile(config.clearTileId));
-                }
-            }
-            // TODO: NEED TO DELETE THIS BLOCK.
+            // Handle destroyed things if any.
+            Array<Block> newBlocks = new Array<>();
+            for (Block b : blocks)
+                if (!b.toDestroy)
+                    newBlocks.add(b);
+            blocks.clear();
+            blocks = newBlocks;
 
             // First, check if we can cancel anything.
             // If a region is canceled, initialize explosion phase.
             if (cancelMaxConnectedRegion()) {
+                // FIXME: There is a bug with detecting the majority!!!
+                int currentTotalDestroyed = 0;
+                for (int i = 0; i < currentDestroyedCounters.length; i++)
+                    currentTotalDestroyed += currentDestroyedCounters[i];
+                for (int i = 0; i < currentDestroyedCounters.length; i++) {
+                    if (currentDestroyedCounters[i] >= currentTotalDestroyed/2 + 1) {
+                        if (i == 0)  majorityPower = Power.T;
+                        else if (i == 1)  majorityPower = Power.Z;
+                        else if (i == 2)  majorityPower = Power.E;
+                        else if (i == 3)  majorityPower = Power.R;
+                        else if (i == 4)  majorityPower = Power.O;
+                        hasMajority = true;
+                    }
+                }
                 exploding = true;
-                wait = 30;  // Show the explosion.
+                destroyTime = 0;
+                wait = config.waitAfterExplosion;  // Show the explosion.
             }
             // If nothing can be canceled, generate a new block.
             else {
+                for (int i = 0; i < currentDestroyedCounters.length; i++)
+                    currentDestroyedCounters[i] = 0;
                 exploding = false;
-                Block newBlock = new Block(config.spawns.get(Utils.rand(0, config.nSpawns - 1)),
-                        Utils.randSpeed(), Utils.randPower());
+                destroyRegion = new int[]{};
+
+                Block newBlock;
+                if (hasMajority) {  // Spawn a special power block.
+                    newBlock = new Block(new int[]{15, 16, 16, 16, 16, 15, 15, 15},
+                            Utils.randSpeed(), majorityPower);
+                    newBlock.isSpecial = true;
+                    newBlock.calculateSpecialTileId();
+                } else {  // Spawn a normal block.
+                    newBlock = new Block(config.spawns.get(Utils.rand(0, config.nSpawns - 1)),
+                            Utils.randSpeed(), Utils.randPower());
+                }
                 for (int i = 0; i < blocks.size - 1; i++) {
                     if (newBlock.overlap(blocks.get(i)))
                         System.out.println("GAME OVER");
                 }
                 blocks.add(newBlock);
+
+                hasMajority = false;
             }
         }
         else {
@@ -179,13 +251,20 @@ public class GameScreen implements Screen {
         // Clear the playground.
         for (int i = 0; i < playground.getWidth(); i++) {
             for (int j = 0; j < playground.getHeight(); j++) {
-                // TODO: NEED TO DELETE THIS IF.
-                if (playground.getCell(i, j).getTile().getId() != config.opaqueTileId)
-                    playground.getCell(i, j).setTile(map.getTileSets().getTile(config.clearTileId));
+                playground.getCell(i, j).setTile(map.getTileSets().getTile(config.clearTileId));
             }
         }
 
-        // Put tiles onto the playground.
+        // Destroy region tiles into the playground.
+        if (destroyRegion.length == 5) {
+            for (int i = destroyRegion[1]; i <= destroyRegion[3]; i++) {
+                for (int j = destroyRegion[2]; j <= destroyRegion[4]; j++) {
+                    playground.getCell(i, j).setTile(map.getTileSets().getTile(config.destroyTileId));
+                }
+            }
+        }
+
+        // Put normal block tiles onto the playground.
         for (int i = 0; i < blocks.size; i++) {
             Block b = blocks.get(i);
             for (int j = 0; j < b.n; j++) {
@@ -287,16 +366,68 @@ public class GameScreen implements Screen {
             for (int i = 0; i < b.n; i++)
                 m[b.shape[2 * i]][b.shape[2 * i + 1]] = 1;
 
+        // Perform cancel region detection.
+        boolean hasSpecial = false;
+        // This is a dummy placeholder.
+        Block specialBlock = new Block(new int[]{16, 16},  Speed.ZERO, Power.T);
+        for (Block b : blocks)
+            if (b.isSpecial) {
+                hasSpecial = true;
+                specialBlock = b;
+                break;
+            }
+        if (hasSpecial) {
+            switch (specialBlock.power) {
+                case T:
+                    // 0 1  2 3  4 5  6 7
+                    // 0 0  1 1  0 0  1 1
+                    destroyRegion = new int[]{0,
+                            Math.max(3, specialBlock.shape[6] - 3),
+                            Math.max(3, specialBlock.shape[7] - 3),
+                            Math.min(28, specialBlock.shape[2] + 3),
+                            Math.min(28, specialBlock.shape[3] + 3)};
+                    break;
+                case Z:
+                    destroyRegion = new int[]{0,
+                            Math.max(3, specialBlock.shape[6] - 3),
+                            Math.max(3, specialBlock.shape[7] - 3),
+                            Math.min(28, specialBlock.shape[2] + 3),
+                            Math.min(28, specialBlock.shape[3] + 3)};
+                    break;
+                case E:
+                    destroyRegion = new int[]{0,
+                            Math.max(3, specialBlock.shape[6] - 3),
+                            Math.max(3, specialBlock.shape[7] - 3),
+                            Math.min(28, specialBlock.shape[2] + 3),
+                            Math.min(28, specialBlock.shape[3] + 3)};
+                    break;
+                case R:
+                    destroyRegion = new int[]{0,
+                            Math.max(3, specialBlock.shape[6] - 3),
+                            Math.max(3, specialBlock.shape[7] - 3),
+                            Math.min(28, specialBlock.shape[2] + 3),
+                            Math.min(28, specialBlock.shape[3] + 3)};
+                    break;
+                case O:
+                    destroyRegion = new int[]{0,
+                            Math.max(3, specialBlock.shape[6] - 3),
+                            Math.max(3, specialBlock.shape[7] - 3),
+                            Math.min(28, specialBlock.shape[2] + 3),
+                            Math.min(28, specialBlock.shape[3] + 3)};
+                    break;
+            }
+        }
         // Max region detection.
-        int [] result = Utils.maxRectangle(m);
-        // System.out.printf("%d - | %d  %d | o | %d  %d |\n", result[0], result[1], result[2], result[3], result[4]);
-        if (result[0] < config.cancelThreshold)
-            return false;
+        else {
+            destroyRegion = Utils.maxRectangle(m);
+            if (destroyRegion[0] < config.cancelThreshold)
+                return false;
+        }
 
-        // Delete canceled blocks.
+        // Handling canceled blocks.
         Array<Block> newBlocks = new Array<>();
         for (Block b : blocks) {
-            Array<Block> smallBlocks = breakDownBlock(b, result);
+            Array<Block> smallBlocks = breakDownBlock(b, destroyRegion);
             for (Block sb : smallBlocks)
                 newBlocks.add(sb);
         }
@@ -304,15 +435,17 @@ public class GameScreen implements Screen {
         blocks = newBlocks;
 
         // Reassign speed to all blocks.
-        int minx = result[1];
-        int miny = result[2];
-        int maxx = result[3];
-        int maxy = result[4];
+        int minx = destroyRegion[1];
+        int miny = destroyRegion[2];
+        int maxx = destroyRegion[3];
+        int maxy = destroyRegion[4];
         for (Block b : blocks) {
             int[] center = b.getCenter();
             int bx = center[0];
             int by = center[1];
-            if (bx < minx) {
+            if (b.toDestroy)
+                b.speed = Speed.ZERO;
+            else if (bx < minx) {
                 if (by > maxy)
                     b.speed = Speed.UPLEFT;
                 else if (by < miny)
@@ -339,6 +472,7 @@ public class GameScreen implements Screen {
 
     private Array<Block> breakDownBlock(Block b, int [] bounds) {
         Array<Block> smallBlocks = new Array<>();
+        if (b.isSpecial)   return smallBlocks;
         int minx = bounds[1];
         int miny = bounds[2];
         int maxx = bounds[3];
@@ -346,7 +480,9 @@ public class GameScreen implements Screen {
 
         // Let's be inefficient.
         int survivingN = 0;
+        int destroyedN = 0;
         int [] survivingUnits = new int[8];  // There are at most 4 units.
+        Array<Array<Integer>> destroyedUnits = new Array<>();
         for (int i = 0 ; i < b.n; i++) {
             int x = b.shape[i * 2];
             int y = b.shape[i * 2 + 1];
@@ -354,11 +490,12 @@ public class GameScreen implements Screen {
                 survivingUnits[2 * survivingN] = x;
                 survivingUnits[2 * survivingN + 1] = y;
                 survivingN++;
+            } else {
+                destroyedUnits.add(new Array<>());
+                destroyedUnits.get(destroyedN).add(x);
+                destroyedUnits.get(destroyedN).add(y);;
+                destroyedN++;
             }
-            else
-                ;
-                // TODO: NEED TO DELETE THIS.
-                // playground.getCell(x, y).setTile(map.getTileSets().getTile(config.opaqueTileId));
         }
         if (survivingN == b.n) {
             smallBlocks.add(b);
@@ -399,6 +536,28 @@ public class GameScreen implements Screen {
                 coords[i] = island.get(i);
             Block islandBlock = new Block(coords, Speed.ZERO, b.power);
             smallBlocks.add(islandBlock);
+        }
+
+        totalTilesDestroyed += destroyedUnits.size;
+        if (b.power == Power.T)
+            currentDestroyedCounters[0] += destroyedUnits.size;
+        else if (b.power == Power.Z)
+            currentDestroyedCounters[1] += destroyedUnits.size;
+        else if (b.power == Power.E)
+            currentDestroyedCounters[2] += destroyedUnits.size;
+        else if (b.power == Power.R)
+            currentDestroyedCounters[3] += destroyedUnits.size;
+        else if (b.power == Power.O)
+            currentDestroyedCounters[4] += destroyedUnits.size;
+
+        for (Array<Integer> destroyedUnit : destroyedUnits) {
+            int [] coords = new int[destroyedUnit.size];
+            for (int i = 0 ; i < destroyedUnit.size; i++)
+                coords[i] = destroyedUnit.get(i);
+            Block destroyedBlock = new Block(coords, Speed.ZERO, b.power);
+            destroyedBlock.toDestroy = true;
+            destroyedBlock.tileId[0] = config.clearTileId;  // There should be only 1 unit.
+            smallBlocks.add(destroyedBlock);
         }
 
         return smallBlocks;

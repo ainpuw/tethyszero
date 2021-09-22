@@ -17,6 +17,9 @@ public class GameConfig {
     public final float screenBgG = 135f / 255f;
     public final float screenBgB = 157f / 255f;
     public final float screenBgA = 1f;
+    public final float gameScreenBgR = 250f / 255f;
+    public final float gameScreenBgG = 224f / 255f;
+    public final float gameScreenBgB = 227f / 255f;
 
     public final float camStartPosX = 16f;
     public final float camStartPosY = 16f;
@@ -26,8 +29,9 @@ public class GameConfig {
     public final int opaqueTileId = 1;
 
     // The time interval to make one step in the game.
-    public final float playerDT = 0.01f;
-    public final float explosionDT = 0.01f;
+    public final float playerDT = 0.03f;
+    public final float explosionDT = 0.03f;
+    public final int waitAfterExplosion = 5;
 
     public Array<int[]> spawns = new Array<>();
     public final int nSpawns;
@@ -37,6 +41,7 @@ public class GameConfig {
 
     public final float tetrazeroAnimationSpeed = 0.4f;
     public final float clicktostartAnimationSpeed = 0.4f;
+    public final float destroyAnimationSpeed = 0.2f;
 
     public GameConfig() {
         // 28 spawning blocks in total.
@@ -98,4 +103,15 @@ public class GameConfig {
         put("0101", 141);
         put("1010", 151);
     }};
+
+    public final static HashMap<Power, Integer> specialTileHashMap = new HashMap<Power, Integer>() {{
+        put(Power.T, 9);
+        put(Power.Z, 29);
+        put(Power.E, 49);
+        put(Power.R, 69);
+        put(Power.O, 89);
+    }};
+
+    public final int destroyTileId = 161;
+
 }

@@ -17,7 +17,9 @@ public class Block {
     public int [] tileId;
     public int tileIdPowerOffset;
     public boolean moved = false;
-    public int remainingActions = 30;  // TODO: Not in game config.
+    public int remainingActions = 300;  // TODO: Not in game config.
+    public boolean toDestroy = false;
+    public boolean isSpecial = false;
 
     public Block(int [] shape, Speed speed, Power power) {
         this.shape = new int[shape.length];
@@ -49,7 +51,11 @@ public class Block {
                 break;
         }
         this.tileId = new int[n];
-        calculateTileId();
+
+        if (isSpecial)
+            calculateSpecialTileId();
+        else
+            calculateTileId();
     }
 
     public void move() {
@@ -153,6 +159,8 @@ public class Block {
     }
 
     public void rotate() {
+        if (isSpecial)  return;  // Special power blocks don't rotate.
+
         shapeBeforeRotation = new int[shape.length];
         for (int i = 0; i < shape.length; i++)
             shapeBeforeRotation[i] = shape[i];
@@ -190,6 +198,8 @@ public class Block {
     }
 
     public void rotateBack() {
+        if (isSpecial)  return;
+
         shape = shapeBeforeRotation;
         calculateTileId();
     }
@@ -283,5 +293,15 @@ public class Block {
             else hashCode += "1";
             tileId[i] = GameConfig.tileHashMap.get(hashCode) + tileIdPowerOffset;
         }
+    }
+
+    public void calculateSpecialTileId() {
+        // FIXME: None of these is in the config!
+        int offset = GameConfig.specialTileHashMap.get(power);
+        // I assume the shape coordinates start from the upper left corner and go clockwise
+        tileId[0] = offset;
+        tileId[1] = offset + 1;
+        tileId[2] = offset + 1 + 10;  // The tile map ha width 10.
+        tileId[3] = offset + 10;
     }
 }
