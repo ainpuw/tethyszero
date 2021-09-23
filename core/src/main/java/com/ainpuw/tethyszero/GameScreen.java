@@ -3,6 +3,7 @@ package com.ainpuw.tethyszero;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -17,6 +18,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 public class GameScreen implements Screen {
     private GameConfig config;
+    private Main game;
 
     private OrthographicCamera camera = new OrthographicCamera();
 
@@ -25,8 +27,12 @@ public class GameScreen implements Screen {
     private OrthogonalTiledMapRenderer renderer;
     Texture destroyTexture = new Texture("destroy_tiles.png");;
     private Array<Animation<TextureRegion>> destroyAnimations = new Array<>();
+    Texture digitsTexture = new Texture("digits.png");;
+    TextureRegion[] digits;
 
-    private Array<Block> blocks = new Array<>();;
+    Sound moveSound = Gdx.audio.newSound(Gdx.files.internal("jump-4.wav"));
+    Sound explodeSound = Gdx.audio.newSound(Gdx.files.internal("explode-7.wav"));
+    private Array<Block> blocks = new Array<>();
 
     private boolean globalZeroSpeed = true;
     private boolean exploding = false;
@@ -43,9 +49,11 @@ public class GameScreen implements Screen {
     private boolean hasMajority = false;
     private Power majorityPower = Power.T;
     private int[] destroyRegion = new int[]{};
+    private boolean isGameOver = false;
 
-    public GameScreen(final Main game) {
+    public GameScreen(Main game) {
         config = game.config;
+        this.game = game;
 
         camera.setToOrtho(config.ydown, config.w, config.h);
         camera.position.x = config.camStartPosX;
@@ -58,6 +66,8 @@ public class GameScreen implements Screen {
             destroyAnimations.add(new Animation(config.destroyAnimationSpeed,
                     destroySprites[i][0], destroySprites[i][1], destroySprites[i][2],
                     destroySprites[i][3], destroySprites[i][4]));
+
+        digits = TextureRegion.split(digitsTexture, 18, 32)[0];
     }
 
     @Override
@@ -92,8 +102,16 @@ public class GameScreen implements Screen {
 
             if (wait > 0)
                 wait--;
-            else
+            else {
+                if (isGameOver) {
+                    while (blocks.size > 0)
+                        blocks.pop();
+                    game.setScreen(new StartScreen(game, false));
+                    dispose();
+                }
                 step();
+                moveSound.play();
+            }
         }
 
 
@@ -129,6 +147,11 @@ public class GameScreen implements Screen {
             }
         }
 
+        // Draw the scores.
+        game.bestScore = Math.max(game.bestScore, totalTilesDestroyed);
+        drawScore(batch, totalTilesDestroyed, 17f);
+        drawScore(batch, game.bestScore, 26f);
+
         batch.end();
 
     }
@@ -156,8 +179,11 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         map.dispose();
-        renderer.dispose();
+        // renderer.dispose();  // FIXME: Put game over somewhere else.
         destroyTexture.dispose();
+        digitsTexture.dispose();
+        moveSound.dispose();
+        explodeSound.dispose();
     }
 
     private void step() {
@@ -218,8 +244,15 @@ public class GameScreen implements Screen {
                             Utils.randSpeed(), Utils.randPower());
                 }
                 for (int i = 0; i < blocks.size - 1; i++) {
-                    if (newBlock.overlap(blocks.get(i)))
+                    if (newBlock.overlap(blocks.get(i))) {
                         System.out.println("GAME OVER");
+                        isGameOver = true;
+                        game.bestScore = Math.max(game.bestScore, totalTilesDestroyed);
+                        TiledMapTileLayer gameoverLayer = (TiledMapTileLayer) map.getLayers().get("gameover");
+                        gameoverLayer.setVisible(true);
+                        wait = config.gameoverWait;
+                        game.backgroundMusic.pause();
+                    }
                 }
                 blocks.add(newBlock);
 
@@ -416,12 +449,15 @@ public class GameScreen implements Screen {
                             Math.min(28, specialBlock.shape[3] + 3)};
                     break;
             }
+
+            explodeSound.play();
         }
         // Max region detection.
         else {
             destroyRegion = Utils.maxRectangle(m);
             if (destroyRegion[0] < config.cancelThreshold)
                 return false;
+            explodeSound.play();
         }
 
         // Handling canceled blocks.
@@ -617,4 +653,20 @@ public class GameScreen implements Screen {
 
         return rotDirection;
     }
+
+    private void drawScore(Batch batch, int score, float xOffset) {
+        // Only draw the last 5 digits.
+        int s = score;
+        for (int i = 0; i < 5; i++) {
+            int digit = s % 10;
+            s /= 10;
+            batch.draw(digits[digit],
+                    xOffset - i * 18.0f/config.tileLen,
+                    0.85f,
+                    18.0f/config.tileLen,
+                    1);
+
+        }
+    }
+
 }

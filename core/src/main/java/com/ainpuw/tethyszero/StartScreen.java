@@ -30,7 +30,7 @@ public class StartScreen implements Screen {
     Texture startTexture;
     private Animation<TextureRegion> clicktostartAnimation;
 
-    public StartScreen(final Main game) {
+    public StartScreen(Main game, boolean isFirstTry) {
         this.game = game;
         config = this.game.config;
 
@@ -66,9 +66,18 @@ public class StartScreen implements Screen {
 
         startTexture = new Texture("clicktostart.png");
         TextureRegion[][] allStartSprites = TextureRegion.split(startTexture, 256, 32);
-        clicktostartAnimation = new Animation(config.clicktostartAnimationSpeed, allStartSprites[0][0], allStartSprites[1][0]);
+        if (isFirstTry)
+            clicktostartAnimation = new Animation(config.clicktostartAnimationSpeed, allStartSprites[0][0], allStartSprites[1][0]);
+        else
+            clicktostartAnimation = new Animation(config.clicktostartAnimationSpeed, allStartSprites[2][0], allStartSprites[3][0]);
         clicktostartAnimation.setPlayMode(Animation.PlayMode.LOOP);
 
+        if (game.backgroundMusic != null)
+            game.backgroundMusic.dispose();
+        game.backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("JuhaniJunkala.wav"));
+        game.backgroundMusic.setVolume(0.1f);
+        game.backgroundMusic.setLooping(true);
+        game.backgroundMusic.play();
     }
 
     @Override
@@ -97,7 +106,7 @@ public class StartScreen implements Screen {
         batch.end();
 
         if (Gdx.input.isTouched()) {
-            game.setScreen(new GameScreen(game));
+            this.game.setScreen(new GameScreen(this.game));
             dispose();
         }
     }
