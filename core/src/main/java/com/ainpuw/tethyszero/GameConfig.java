@@ -28,16 +28,21 @@ public class GameConfig {
     public final int clearTileId = 3;
 
     // The time interval to make one step in the game.
-    public final float playerDT = 0.05f;
-    public final float explosionDT = 0.1f;
-    public final int waitAfterExplosion = 5;
-    public final int gameoverWait = 80;
+    public float playerDTDefault = 0.4f;
+    public final float playerDTDefaultScaling = 0.95f;
+    public final float increaseSpeedEvery = 5f;  // Seconds.
+    public float playerDT = 0.4f;
+    public final float playerDTScaling = 0.95f;
+    public final float explosionDT = 0.01f;
+    public final float startingWait = 0.5f;
+    public final float waitAfterExplosion = 0.5f;
+    public final float gameoverWait = 1f;
 
     public Array<int[]> spawns = new Array<>();
     public final int nSpawns;
 
     // Need this number of units in a connected rectangular region to cancel.
-    public final int cancelThreshold = 60;
+    public final int cancelThreshold = 18;
 
     public final float tetrazeroAnimationSpeed = 0.4f;
     public final float clicktostartAnimationSpeed = 0.4f;
@@ -48,43 +53,43 @@ public class GameConfig {
         // O block.
         spawns.add(new int[]{15, 15, 15, 16, 16, 15, 16, 16});
         spawns.add(new int[]{15, 15, 15, 16, 16, 15, 16, 16});
-        // spawns.add(new int[]{15, 15, 15, 16, 16, 15, 16, 16});
-        // spawns.add(new int[]{15, 15, 15, 16, 16, 15, 16, 16});
+        spawns.add(new int[]{15, 15, 15, 16, 16, 15, 16, 16});
+        spawns.add(new int[]{15, 15, 15, 16, 16, 15, 16, 16});
 
         // I block.
         spawns.add(new int[]{14, 15, 15, 15, 16, 15, 17, 15});
         spawns.add(new int[]{14, 16, 15, 16, 16, 16, 17, 16});
-        // spawns.add(new int[]{15, 14, 15, 15, 15, 16, 15, 17});
-        // spawns.add(new int[]{16, 14, 16, 15, 16, 16, 16, 17});
+        spawns.add(new int[]{15, 14, 15, 15, 15, 16, 15, 17});
+        spawns.add(new int[]{16, 14, 16, 15, 16, 16, 16, 17});
 
         // T block.
-        // spawns.add(new int[]{15, 16, 16, 16, 16, 17, 16, 15});
+        spawns.add(new int[]{15, 16, 16, 16, 16, 17, 16, 15});
         spawns.add(new int[]{15, 15, 16, 15, 17, 15, 16, 16});
-        // spawns.add(new int[]{15, 16, 15, 15, 15, 14, 16, 15});
+        spawns.add(new int[]{15, 16, 15, 15, 15, 14, 16, 15});
         spawns.add(new int[]{14, 16, 15, 16, 16, 16, 15, 15});
 
         // Z block.
         spawns.add(new int[]{15, 16, 16, 16, 16, 15, 17, 15});
-        // spawns.add(new int[]{16, 16, 16, 15, 15, 15, 15, 14});
+        spawns.add(new int[]{16, 16, 16, 15, 15, 15, 15, 14});
         spawns.add(new int[]{16, 15, 15, 15, 15, 16, 14, 16});
-        // spawns.add(new int[]{15, 15, 15, 16, 16, 16, 16, 17});
+        spawns.add(new int[]{15, 15, 15, 16, 16, 16, 16, 17});
 
         // S block.
         spawns.add(new int[]{16, 16, 15, 16, 15, 15, 14, 15});
-        // spawns.add(new int[]{15, 16, 15, 15, 16, 15, 16, 14});
+        spawns.add(new int[]{15, 16, 15, 15, 16, 15, 16, 14});
         spawns.add(new int[]{15, 15, 16, 15, 16, 16, 17, 16});
-        // spawns.add(new int[]{16, 15, 16, 16, 15, 16, 15, 17});
+        spawns.add(new int[]{16, 15, 16, 16, 15, 16, 15, 17});
 
         // L block.
-        // spawns.add(new int[]{15, 17, 15, 16, 15, 15, 16, 15});
+        spawns.add(new int[]{15, 17, 15, 16, 15, 15, 16, 15});
         spawns.add(new int[]{14, 15, 15, 15, 16, 15, 16, 16});
-        // spawns.add(new int[]{16, 14, 16, 15, 16, 16, 15, 16});
+        spawns.add(new int[]{16, 14, 16, 15, 16, 16, 15, 16});
         spawns.add(new int[]{17, 16, 16, 16, 15, 16, 15, 15});
 
         // J block.
-        // spawns.add(new int[]{16, 17, 16, 16, 16, 15, 15, 15});
+        spawns.add(new int[]{16, 17, 16, 16, 16, 15, 15, 15});
         spawns.add(new int[]{17, 15, 16, 15, 15, 15, 15, 16});
-        // spawns.add(new int[]{15, 14, 15, 15, 15, 16, 16, 16});
+        spawns.add(new int[]{15, 14, 15, 15, 15, 16, 16, 16});
         spawns.add(new int[]{14, 16, 15, 16, 16, 16, 16, 15});
 
         nSpawns = spawns.size;

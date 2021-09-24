@@ -1,0 +1,6 @@
+* Fill in any rectangle shape of at least 18 squares
+* Power spawns when there is a majority color
+* Pink blocks spawns more often
+* Pink power blocks turn pink into a random color
+* All other power blocks are bombs
+* Things speed up over time

@@ -29,10 +29,25 @@ public class Utils {
     }
 
     public static Power randPower() {
-        int r = rand(0, 4);
-        if (r == 0)
+        int r1 = rand(0, 9);
+        if (r1 <= 7)
             return Power.T;
-        else if (r == 1)
+        else {
+            int r = rand(1, 4);
+            if (r == 1)
+                return Power.Z;
+            else if (r == 2)
+                return Power.E;
+            else if (r == 3)
+                return Power.R;
+            else
+                return Power.O;
+        }
+    }
+
+    public static Power randNonTPower() {
+        int r = rand(1, 4);
+        if (r == 1)
             return Power.Z;
         else if (r == 2)
             return Power.E;

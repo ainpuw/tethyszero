@@ -1,6 +1,7 @@
 package com.ainpuw.tethyszero;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -8,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.Array;
@@ -27,7 +29,11 @@ public class StartScreen implements Screen {
     float [] tetrazeroX;
     float [] tetrazeroY;
 
-    Texture startTexture;
+    private Texture startTexture = new Texture("clicktostart.png");;
+    private Texture restartTexture = new Texture("restart.png");;
+    private TextureRegion gameTitleLogo;
+    private TextureRegion restartTextureRegion = TextureRegion.split(restartTexture, 32, 32)[0][0];
+
     private Animation<TextureRegion> clicktostartAnimation;
 
     public StartScreen(Main game, boolean isFirstTry) {
@@ -64,20 +70,18 @@ public class StartScreen implements Screen {
 
         tetrazeroY = new float[]{14, 14, 14, 14, 14};
 
-        startTexture = new Texture("clicktostart.png");
         TextureRegion[][] allStartSprites = TextureRegion.split(startTexture, 256, 32);
-        if (isFirstTry)
-            clicktostartAnimation = new Animation(config.clicktostartAnimationSpeed, allStartSprites[0][0], allStartSprites[1][0]);
-        else
-            clicktostartAnimation = new Animation(config.clicktostartAnimationSpeed, allStartSprites[2][0], allStartSprites[3][0]);
+        clicktostartAnimation = new Animation(config.clicktostartAnimationSpeed, allStartSprites[0][0], allStartSprites[1][0]);
         clicktostartAnimation.setPlayMode(Animation.PlayMode.LOOP);
+        gameTitleLogo = allStartSprites[2][0];
 
-        if (game.backgroundMusic != null)
-            game.backgroundMusic.dispose();
-        game.backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("JuhaniJunkala.wav"));
-        game.backgroundMusic.setVolume(0.1f);
-        game.backgroundMusic.setLooping(true);
-        game.backgroundMusic.play();
+        game.startMusic.stop();
+        game.startMusic.play();
+
+        if (!isFirstTry) {
+            TiledMapTileLayer rulesLayer = (TiledMapTileLayer) map.getLayers().get("rules");
+            rulesLayer.setVisible(true);
+        }
     }
 
     @Override
@@ -92,20 +96,33 @@ public class StartScreen implements Screen {
 
         Batch batch = renderer.getBatch();
         batch.begin();
+
+        // Draw click to start, use Tetra's time.
+        TextureRegion frame = clicktostartAnimation.getKeyFrame(tetrazeroStateTime[0]);
+        batch.draw(frame, 7.9f, 10, 16, 2);
+
+        // Draw restarts.
+        for (int i = 0; i < game.restartCounter; i++) {
+            // batch.draw(restartTextureRegion, 17 + i*0.92f, 11.5f + i*0.05f, 2.5f, 2.5f);
+            batch.draw(restartTextureRegion, 17 - i*0.3f, 10.5f + i*1.2f, 2.5f, 2.5f);
+        }
+
+        // Draw logo.
+        batch.draw(gameTitleLogo, 6.6f, 20, 16 * 1.1f, 2 * 1.1f);
+
+        // Draw tetra zero.
         for (int i = 0; i < 5; i++) {
             tetrazeroStateTime[i] = Math.min(tetrazeroStateTime[i] + deltaTime, 1000000);
 
-            TextureRegion frame = tetrazeroAnimations.get(i).getKeyFrame(tetrazeroStateTime[i]);
+            frame = tetrazeroAnimations.get(i).getKeyFrame(tetrazeroStateTime[i]);
             batch.draw(frame, tetrazeroX[i], tetrazeroY[i], 3, 6);
         }
 
-        // Use Tetra's time.
-        TextureRegion frame = clicktostartAnimation.getKeyFrame(tetrazeroStateTime[0]);
-        batch.draw(frame, 8, 11, 16, 2);
-
         batch.end();
 
-        if (Gdx.input.isTouched()) {
+        if (Gdx.input.isTouched() || Gdx.input.isKeyPressed(Input.Keys.ANY_KEY)) {
+            // Refresh game config.
+            this.game.config = new GameConfig();
             this.game.setScreen(new GameScreen(this.game));
             dispose();
         }
@@ -135,6 +152,7 @@ public class StartScreen implements Screen {
     public void dispose() {
         terazeroTexture.dispose();
         startTexture.dispose();
+        restartTexture.dispose();
     }
 
 }

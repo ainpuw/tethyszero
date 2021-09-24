@@ -7,10 +7,14 @@ import com.badlogic.gdx.audio.Music;
 public class Main extends Game {
     public GameConfig config;
     public int bestScore = 0;
-    public Music backgroundMusic;
+    public int restartCounter = 0;
+    public Music startMusic;
 
     public void create() {
         config = new GameConfig();
+        startMusic = Gdx.audio.newMusic(Gdx.files.internal("BadSpeechPSG3.mp3"));
+        startMusic.setLooping(true);
+
         this.setScreen(new StartScreen(this, true));
     }
 
@@ -20,7 +24,7 @@ public class Main extends Game {
     }
 
     public void dispose() {
-        backgroundMusic.dispose();
+        startMusic.dispose();
     }
 
 }

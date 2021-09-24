@@ -30,8 +30,9 @@ public class GameScreen implements Screen {
     Texture digitsTexture = new Texture("digits.png");;
     TextureRegion[] digits;
 
-    Sound moveSound = Gdx.audio.newSound(Gdx.files.internal("jump-4.wav"));
-    Sound explodeSound = Gdx.audio.newSound(Gdx.files.internal("explode-7.wav"));
+    Sound explodeSound = Gdx.audio.newSound(Gdx.files.internal("retro_explosion_05.ogg"));
+    Sound gameoverSound = Gdx.audio.newSound(Gdx.files.internal("retro_die_03.ogg"));
+
     private Array<Block> blocks = new Array<>();
 
     private boolean globalZeroSpeed = true;
@@ -41,14 +42,16 @@ public class GameScreen implements Screen {
     private int rotationAction = 0;
     private boolean playerRotation = false;
     private float cumulativeTime;
+    private float totalTime = 0;
     private float destroyTime = 0;
-    private int wait = 0;
+    private float wait;
 
     private int totalTilesDestroyed = 0;
     private int [] currentDestroyedCounters = new int[]{0, 0, 0, 0, 0};
     private boolean hasMajority = false;
     private Power majorityPower = Power.T;
     private int[] destroyRegion = new int[]{};
+    private boolean usedSpecialLastTime = false;
     private boolean isGameOver = false;
 
     public GameScreen(Main game) {
@@ -68,6 +71,8 @@ public class GameScreen implements Screen {
                     destroySprites[i][3], destroySprites[i][4]));
 
         digits = TextureRegion.split(digitsTexture, 18, 32)[0];
+
+        wait = config.startingWait;
     }
 
     @Override
@@ -78,22 +83,34 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         // Take player input.
-        if (Gdx.input.isKeyPressed(Input.Keys.UP))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.UP))
             inputActions[0] = true;
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN))
             inputActions[1] = true;
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT))
             inputActions[2] = true;
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT))
             inputActions[3] = true;
-        if (Gdx.input.isKeyPressed(Input.Keys.Z))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Z))
             inputActions[4] = true;
-        if (Gdx.input.isKeyPressed(Input.Keys.X))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.X))
             inputActions[5] = true;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY))
+            config.playerDT *= config.playerDTScaling;
 
         // Perform a step every dt amount of real time.
         // When an explosion is happening, it steps faster.
         cumulativeTime += Gdx.graphics.getDeltaTime();
+        wait -= Gdx.graphics.getDeltaTime();
+        wait = Math.max(-1, wait);
+        totalTime += Gdx.graphics.getDeltaTime();
+
+        // Things go faster every N seconds.
+        if (totalTime > this.config.increaseSpeedEvery) {
+            totalTime -= this.config.increaseSpeedEvery;
+            this.config.playerDTDefault *= this.config.playerDTDefaultScaling;
+        }
+
         if ((exploding && cumulativeTime >= config.explosionDT)
                 || (!exploding && cumulativeTime >= config.playerDT)) {
             speedAction = resolveSpeedAction();
@@ -101,7 +118,7 @@ public class GameScreen implements Screen {
             cumulativeTime = 0;
 
             if (wait > 0)
-                wait--;
+                ;
             else {
                 if (isGameOver) {
                     while (blocks.size > 0)
@@ -110,7 +127,6 @@ public class GameScreen implements Screen {
                     dispose();
                 }
                 step();
-                moveSound.play();
             }
         }
 
@@ -182,8 +198,8 @@ public class GameScreen implements Screen {
         // renderer.dispose();  // FIXME: Put game over somewhere else.
         destroyTexture.dispose();
         digitsTexture.dispose();
-        moveSound.dispose();
         explodeSound.dispose();
+        gameoverSound.dispose();
     }
 
     private void step() {
@@ -210,8 +226,10 @@ public class GameScreen implements Screen {
             if (cancelMaxConnectedRegion()) {
                 // FIXME: There is a bug with detecting the majority!!!
                 int currentTotalDestroyed = 0;
-                for (int i = 0; i < currentDestroyedCounters.length; i++)
+                for (int i = 0; i < currentDestroyedCounters.length; i++) {
                     currentTotalDestroyed += currentDestroyedCounters[i];
+                }
+
                 for (int i = 0; i < currentDestroyedCounters.length; i++) {
                     if (currentDestroyedCounters[i] >= currentTotalDestroyed/2 + 1) {
                         if (i == 0)  majorityPower = Power.T;
@@ -234,14 +252,16 @@ public class GameScreen implements Screen {
                 destroyRegion = new int[]{};
 
                 Block newBlock;
-                if (hasMajority) {  // Spawn a special power block.
+                if (hasMajority && !usedSpecialLastTime) {  // Spawn a special power block.
                     newBlock = new Block(new int[]{15, 16, 16, 16, 16, 15, 15, 15},
                             Utils.randSpeed(), majorityPower);
                     newBlock.isSpecial = true;
                     newBlock.calculateSpecialTileId();
+                    usedSpecialLastTime = true;
                 } else {  // Spawn a normal block.
                     newBlock = new Block(config.spawns.get(Utils.rand(0, config.nSpawns - 1)),
                             Utils.randSpeed(), Utils.randPower());
+                    usedSpecialLastTime = false;
                 }
                 for (int i = 0; i < blocks.size - 1; i++) {
                     if (newBlock.overlap(blocks.get(i))) {
@@ -251,11 +271,13 @@ public class GameScreen implements Screen {
                         TiledMapTileLayer gameoverLayer = (TiledMapTileLayer) map.getLayers().get("gameover");
                         gameoverLayer.setVisible(true);
                         wait = config.gameoverWait;
-                        game.backgroundMusic.pause();
+                        gameoverSound.play();
+                        game.startMusic.stop();
+                        game.restartCounter += 1;
                     }
                 }
                 blocks.add(newBlock);
-
+                config.playerDT = config.playerDTDefault;
                 hasMajority = false;
             }
         }
@@ -412,14 +434,24 @@ public class GameScreen implements Screen {
         if (hasSpecial) {
             switch (specialBlock.power) {
                 case T:
-                    // 0 1  2 3  4 5  6 7
-                    // 0 0  1 1  0 0  1 1
-                    destroyRegion = new int[]{0,
-                            Math.max(3, specialBlock.shape[6] - 3),
-                            Math.max(3, specialBlock.shape[7] - 3),
-                            Math.min(28, specialBlock.shape[2] + 3),
-                            Math.min(28, specialBlock.shape[3] + 3)};
-                    break;
+                    // Choose a random power that is not T.
+                    Power newP = Utils.randNonTPower();
+
+                    // Change T special into the new power.
+                    specialBlock.isSpecial = false;
+                    specialBlock.power = newP;
+                    specialBlock.calculateTileId();
+
+                    // Change all other T block into the new power.
+                    for (Block b : blocks) {
+                        if (b.power == Power.T) {
+                            b.power = newP;
+                            b.calculateTileId();
+                        }
+                    }
+
+                    // Doesn't cancel anything this time.
+                    return false;
                 case Z:
                     destroyRegion = new int[]{0,
                             Math.max(3, specialBlock.shape[6] - 3),

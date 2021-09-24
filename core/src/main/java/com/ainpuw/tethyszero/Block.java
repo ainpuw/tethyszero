@@ -17,7 +17,7 @@ public class Block {
     public int [] tileId;
     public int tileIdPowerOffset;
     public boolean moved = false;
-    public int remainingActions = 300;  // TODO: Not in game config.
+    public int remainingActions = 1000;  // TODO: Not in game config.
     public boolean toDestroy = false;
     public boolean isSpecial = false;
 
@@ -35,13 +35,13 @@ public class Block {
         this.power = power;
         switch (this.power) {
             case T:
-                tileIdPowerOffset = 2;
-                break;
-            case Z:
                 tileIdPowerOffset = 0;
                 break;
-            case E:
+            case Z:
                 tileIdPowerOffset = 1;
+                break;
+            case E:
+                tileIdPowerOffset = 2;
                 break;
             case R:
                 tileIdPowerOffset = 3;
@@ -273,6 +273,25 @@ public class Block {
     }
 
     public void calculateTileId() {
+        // Recheck this. FIXME: copy pasted code.
+        switch (this.power) {
+            case T:
+                tileIdPowerOffset = 0;
+                break;
+            case Z:
+                tileIdPowerOffset = 1;
+                break;
+            case E:
+                tileIdPowerOffset = 2;
+                break;
+            case R:
+                tileIdPowerOffset = 3;
+                break;
+            case O:
+                tileIdPowerOffset = 4;
+                break;
+        }
+
         HashMap<String, Integer> shapeHashMap = new HashMap<String, Integer>();
         for (int i = 0; i < n; i++) {
             int x = shape[i * 2];
