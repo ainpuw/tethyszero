@@ -1,0 +1,5 @@
+* Any filled rectangle of at least 12 squares cancels
+* Try grouping and canceling the same color
+  it spawns power blocks of that color
+* Pink power blocks turn pink into the majority color
+* Green, blue, yellow, orange power blocks are bombs

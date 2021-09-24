@@ -31,7 +31,7 @@ public class GameScreen implements Screen {
     TextureRegion[] digits;
 
     Sound explodeSound = Gdx.audio.newSound(Gdx.files.internal("retro_explosion_05.ogg"));
-    Sound gameoverSound = Gdx.audio.newSound(Gdx.files.internal("retro_die_03.ogg"));
+    Sound gameoverSound = Gdx.audio.newSound(Gdx.files.internal("synth_misc_14.ogg"));
 
     private Array<Block> blocks = new Array<>();
 
@@ -83,20 +83,30 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         // Take player input.
-        if (Gdx.input.isKeyJustPressed(Input.Keys.UP))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
             inputActions[0] = true;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN))
-            inputActions[1] = true;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT))
-            inputActions[2] = true;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT))
-            inputActions[3] = true;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Z))
-            inputActions[4] = true;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.X))
-            inputActions[5] = true;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY))
             config.playerDT *= config.playerDTScaling;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
+            inputActions[1] = true;
+            config.playerDT *= config.playerDTScaling;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.A)) {
+            inputActions[2] = true;
+            config.playerDT *= config.playerDTScaling;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+            inputActions[3] = true;
+            config.playerDT *= config.playerDTScaling;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            inputActions[4] = true;
+            config.playerDT *= config.playerDTScaling;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+            inputActions[5] = true;
+            config.playerDT *= config.playerDTScaling;
+        }
 
         // Perform a step every dt amount of real time.
         // When an explosion is happening, it steps faster.
@@ -263,7 +273,7 @@ public class GameScreen implements Screen {
                             Utils.randSpeed(), Utils.randPower());
                     usedSpecialLastTime = false;
                 }
-                for (int i = 0; i < blocks.size - 1; i++) {
+                for (int i = 0; i < blocks.size; i++) {
                     if (newBlock.overlap(blocks.get(i))) {
                         System.out.println("GAME OVER");
                         isGameOver = true;
@@ -434,8 +444,29 @@ public class GameScreen implements Screen {
         if (hasSpecial) {
             switch (specialBlock.power) {
                 case T:
-                    // Choose a random power that is not T.
-                    Power newP = Utils.randNonTPower();
+                    // Choose the second more popular block. FIXME: Bad if else.
+                    int [] powerCounter = new int[]{0, 0, 0, 0};
+                    for (Block b : blocks) {
+                        if (b.power == Power.Z)
+                            powerCounter[0] += b.n;
+                        else if (b.power == Power.E)
+                            powerCounter[1] += b.n;
+                        else if (b.power == Power.R)
+                            powerCounter[2] += b.n;
+                        else if (b.power == Power.O)
+                            powerCounter[3] += b.n;
+                    }
+                    int maxIdx = 0;
+                    for (int i = 0; i < 4; i++)
+                        if (powerCounter[i] > powerCounter[maxIdx])
+                            maxIdx = i;
+                    Power newP = Power.Z;
+                    if (maxIdx == 1)
+                        newP = Power.E;
+                    else if (maxIdx == 2)
+                        newP = Power.R;
+                    else if (maxIdx == 3)
+                        newP = Power.O;
 
                     // Change T special into the new power.
                     specialBlock.isSpecial = false;
@@ -454,31 +485,31 @@ public class GameScreen implements Screen {
                     return false;
                 case Z:
                     destroyRegion = new int[]{0,
-                            Math.max(3, specialBlock.shape[6] - 3),
-                            Math.max(3, specialBlock.shape[7] - 3),
-                            Math.min(28, specialBlock.shape[2] + 3),
-                            Math.min(28, specialBlock.shape[3] + 3)};
+                            Math.max(config.wallMinX + 1, specialBlock.shape[6] - 3),
+                            Math.max(config.wallMinY + 1, specialBlock.shape[7] - 3),
+                            Math.min(config.wallMaxX - 1, specialBlock.shape[2] + 3),
+                            Math.min(config.wallMaxY - 1, specialBlock.shape[3] + 3)};
                     break;
                 case E:
                     destroyRegion = new int[]{0,
-                            Math.max(3, specialBlock.shape[6] - 3),
-                            Math.max(3, specialBlock.shape[7] - 3),
-                            Math.min(28, specialBlock.shape[2] + 3),
-                            Math.min(28, specialBlock.shape[3] + 3)};
+                            Math.max(config.wallMinX + 1, specialBlock.shape[6] - 3),
+                            Math.max(config.wallMinY + 1, specialBlock.shape[7] - 3),
+                            Math.min(config.wallMaxX - 1, specialBlock.shape[2] + 3),
+                            Math.min(config.wallMaxY - 1, specialBlock.shape[3] + 3)};
                     break;
                 case R:
                     destroyRegion = new int[]{0,
-                            Math.max(3, specialBlock.shape[6] - 3),
-                            Math.max(3, specialBlock.shape[7] - 3),
-                            Math.min(28, specialBlock.shape[2] + 3),
-                            Math.min(28, specialBlock.shape[3] + 3)};
+                            Math.max(config.wallMinX + 1, specialBlock.shape[6] - 3),
+                            Math.max(config.wallMinY + 1, specialBlock.shape[7] - 3),
+                            Math.min(config.wallMaxX - 1, specialBlock.shape[2] + 3),
+                            Math.min(config.wallMaxY - 1, specialBlock.shape[3] + 3)};
                     break;
                 case O:
                     destroyRegion = new int[]{0,
-                            Math.max(3, specialBlock.shape[6] - 3),
-                            Math.max(3, specialBlock.shape[7] - 3),
-                            Math.min(28, specialBlock.shape[2] + 3),
-                            Math.min(28, specialBlock.shape[3] + 3)};
+                            Math.max(config.wallMinX + 1, specialBlock.shape[6] - 3),
+                            Math.max(config.wallMinY + 1, specialBlock.shape[7] - 3),
+                            Math.min(config.wallMaxX - 1, specialBlock.shape[2] + 3),
+                            Math.min(config.wallMaxY - 1, specialBlock.shape[3] + 3)};
                     break;
             }
 
@@ -694,7 +725,7 @@ public class GameScreen implements Screen {
             s /= 10;
             batch.draw(digits[digit],
                     xOffset - i * 18.0f/config.tileLen,
-                    0.85f,
+                    1.85f,
                     18.0f/config.tileLen,
                     1);
 

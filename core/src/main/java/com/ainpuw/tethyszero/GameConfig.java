@@ -8,10 +8,10 @@ public class GameConfig {
     public final boolean ydown = false;
     public final float w = 32f;
     public final float h = 32f;
-    public final int wallMinX = 2;
-    public final int wallMaxX = 29;
-    public final int wallMinY = 2;
-    public final int wallMaxY = 29;
+    public final int wallMinX = 4;
+    public final int wallMaxX = 27;
+    public final int wallMinY = 4;
+    public final int wallMaxY = 27;
 
     public final float screenBgR = 255f / 255f;
     public final float screenBgG = 135f / 255f;
@@ -28,11 +28,11 @@ public class GameConfig {
     public final int clearTileId = 3;
 
     // The time interval to make one step in the game.
-    public float playerDTDefault = 0.4f;
+    public float playerDTDefault = 0.2f;
     public final float playerDTDefaultScaling = 0.95f;
     public final float increaseSpeedEvery = 5f;  // Seconds.
-    public float playerDT = 0.4f;
-    public final float playerDTScaling = 0.95f;
+    public float playerDT = 0.2f;
+    public final float playerDTScaling = 0.90f;
     public final float explosionDT = 0.01f;
     public final float startingWait = 0.5f;
     public final float waitAfterExplosion = 0.5f;
@@ -42,7 +42,7 @@ public class GameConfig {
     public final int nSpawns;
 
     // Need this number of units in a connected rectangular region to cancel.
-    public final int cancelThreshold = 18;
+    public final int cancelThreshold = 12;
 
     public final float tetrazeroAnimationSpeed = 0.4f;
     public final float clicktostartAnimationSpeed = 0.4f;

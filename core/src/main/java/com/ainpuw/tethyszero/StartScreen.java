@@ -23,7 +23,7 @@ public class StartScreen implements Screen {
     private TiledMap map = new TmxMapLoader().load("startscreen.tmx");;
     private OrthogonalTiledMapRenderer renderer;
 
-    private Texture terazeroTexture = new Texture("tetrazero.png");;
+    private Texture tetrazeroTexture = new Texture("tetrazero.png");;
     private Array<Animation<TextureRegion>> tetrazeroAnimations = new Array<>();
     float [] tetrazeroStateTime;
     float [] tetrazeroX;
@@ -45,7 +45,7 @@ public class StartScreen implements Screen {
         camera.position.y = config.camStartPosY;
         renderer = new OrthogonalTiledMapRenderer(map, 1 / (float) config.tileLen);
 
-        TextureRegion[][] allTetrazeroSprites = TextureRegion.split(terazeroTexture, 32, 64);
+        TextureRegion[][] allTetrazeroSprites = TextureRegion.split(tetrazeroTexture, 32, 64);
         TextureRegion[] tetraRegions = allTetrazeroSprites[0];
         TextureRegion[] zRegions = allTetrazeroSprites[1];
         TextureRegion[] eRegions = allTetrazeroSprites[2];
@@ -150,7 +150,7 @@ public class StartScreen implements Screen {
 
     @Override
     public void dispose() {
-        terazeroTexture.dispose();
+        tetrazeroTexture.dispose();
         startTexture.dispose();
         restartTexture.dispose();
     }

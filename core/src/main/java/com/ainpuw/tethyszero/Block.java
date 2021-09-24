@@ -292,23 +292,23 @@ public class Block {
                 break;
         }
 
-        HashMap<String, Integer> shapeHashMap = new HashMap<String, Integer>();
+        HashMap<Integer, Integer> shapeHashMap = new HashMap<Integer, Integer>();
         for (int i = 0; i < n; i++) {
             int x = shape[i * 2];
             int y = shape[i * 2 + 1];
-            shapeHashMap.put(String.format("%d-%d", x, y), 1);
+            shapeHashMap.put(x*1000+y, 1);
         }
         for (int i = 0; i < n; i++) {
             int x = shape[i * 2];
             int y = shape[i * 2 + 1];
             String hashCode = "";
-            if (shapeHashMap.containsKey(String.format("%d-%d", x - 1, y))) hashCode += "0";
+            if (shapeHashMap.containsKey((x - 1)*1000 + y)) hashCode += "0";
             else hashCode += "1";
-            if (shapeHashMap.containsKey(String.format("%d-%d", x, y + 1))) hashCode += "0";
+            if (shapeHashMap.containsKey(x*1000 + y + 1)) hashCode += "0";
             else hashCode += "1";
-            if (shapeHashMap.containsKey(String.format("%d-%d", x + 1, y))) hashCode += "0";
+            if (shapeHashMap.containsKey((x + 1)*1000 + y)) hashCode += "0";
             else hashCode += "1";
-            if (shapeHashMap.containsKey(String.format("%d-%d", x, y - 1))) hashCode += "0";
+            if (shapeHashMap.containsKey(x*1000 + y - 1)) hashCode += "0";
             else hashCode += "1";
             tileId[i] = GameConfig.tileHashMap.get(hashCode) + tileIdPowerOffset;
         }
