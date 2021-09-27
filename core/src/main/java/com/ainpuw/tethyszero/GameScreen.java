@@ -107,6 +107,35 @@ public class GameScreen implements Screen {
             inputActions[5] = true;
             config.playerDT *= config.playerDTScaling;
         }
+        config.playerDT = Math.max(config.playerMaxSpeed, config.playerDT);
+        /*
+        // For click and touch screens.
+        if (Gdx.input.isTouched()) {
+            float touchX = Gdx.input.getX() / config.tileLen;
+            float touchY = config.h - Gdx.input.getY() / config.tileLen;
+
+            Block lastBlock = blocks.get(blocks.size - 1);
+            int [] blockCenter = lastBlock.getCenter();
+            touchX -= blockCenter[0];
+            touchY -= blockCenter[1];
+            if (touchY > 0 && Math.abs(touchY) > Math.abs(touchX)) {
+                inputActions[0] = true;
+                config.playerDT *= config.playerDTScaling;
+            }
+            else if (touchY < 0 && Math.abs(touchY) > Math.abs(touchX)) {
+                inputActions[1] = true;
+                config.playerDT *= config.playerDTScaling;
+            }
+            else if (touchX < 0 && Math.abs(touchY) < Math.abs(touchX)) {
+                inputActions[2] = true;
+                config.playerDT *= config.playerDTScaling;
+            }
+            else if (touchX > 0 && Math.abs(touchY) < Math.abs(touchX)) {
+                inputActions[3] = true;
+                config.playerDT *= config.playerDTScaling;
+            }
+        }
+        */
 
         // Perform a step every dt amount of real time.
         // When an explosion is happening, it steps faster.
@@ -275,7 +304,7 @@ public class GameScreen implements Screen {
                 }
                 for (int i = 0; i < blocks.size; i++) {
                     if (newBlock.overlap(blocks.get(i))) {
-                        System.out.println("GAME OVER");
+                        // System.out.println("GAME OVER");
                         isGameOver = true;
                         game.bestScore = Math.max(game.bestScore, totalTilesDestroyed);
                         TiledMapTileLayer gameoverLayer = (TiledMapTileLayer) map.getLayers().get("gameover");
@@ -460,7 +489,7 @@ public class GameScreen implements Screen {
                     for (int i = 0; i < 4; i++)
                         if (powerCounter[i] > powerCounter[maxIdx])
                             maxIdx = i;
-                    Power newP = Power.Z;
+                    Power newP = Utils.randNonTPower();
                     if (maxIdx == 1)
                         newP = Power.E;
                     else if (maxIdx == 2)

@@ -28,11 +28,12 @@ public class GameConfig {
     public final int clearTileId = 3;
 
     // The time interval to make one step in the game.
-    public float playerDTDefault = 0.2f;
+    public float playerDTDefault = 0.25f;
     public final float playerDTDefaultScaling = 0.95f;
     public final float increaseSpeedEvery = 5f;  // Seconds.
-    public float playerDT = 0.2f;
+    public float playerDT = playerDTDefault;
     public final float playerDTScaling = 0.90f;
+    public final float playerMaxSpeed = 0.0833f;
     public final float explosionDT = 0.01f;
     public final float startingWait = 0.5f;
     public final float waitAfterExplosion = 0.5f;
