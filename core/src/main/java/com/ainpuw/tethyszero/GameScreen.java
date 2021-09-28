@@ -667,8 +667,8 @@ public class GameScreen implements Screen {
         }
 
         totalTilesDestroyed += destroyedUnits.size;
-        if (!config.isEasy)  // Double score for hard mode.
-            totalTilesDestroyed += destroyedUnits.size;
+        if (!config.isEasy)  // Triple score for hard mode.
+            totalTilesDestroyed += 2 * destroyedUnits.size;
 
         if (b.power == Power.T)
             currentDestroyedCounters[0] += destroyedUnits.size;
