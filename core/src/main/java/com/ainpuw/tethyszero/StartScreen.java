@@ -33,6 +33,7 @@ public class StartScreen implements Screen {
     private Texture restartTexture = new Texture("restart.png");;
     private TextureRegion gameTitleLogo;
     private TextureRegion restartTextureRegion = TextureRegion.split(restartTexture, 32, 32)[0][0];
+    private Array<Integer> rePositions = new Array<>();
 
     private Animation<TextureRegion> clicktostartAnimation;
 
@@ -81,6 +82,11 @@ public class StartScreen implements Screen {
         if (!isFirstTry) {
             TiledMapTileLayer rulesLayer = (TiledMapTileLayer) map.getLayers().get("rules");
             rulesLayer.setVisible(true);
+
+            for (int i = 0; i < this.game.restartCounter; i++) {
+                rePositions.add(Utils.rand(7, 22));
+                rePositions.add(Utils.rand(16, 22));
+            }
         }
     }
 
@@ -101,12 +107,6 @@ public class StartScreen implements Screen {
         TextureRegion frame = clicktostartAnimation.getKeyFrame(tetrazeroStateTime[0]);
         batch.draw(frame, 7.9f, 10, 16, 2);
 
-        // Draw restarts.
-        for (int i = 0; i < game.restartCounter; i++) {
-            // batch.draw(restartTextureRegion, 17 + i*0.92f, 11.5f + i*0.05f, 2.5f, 2.5f);
-            batch.draw(restartTextureRegion, 17 - i*0.3f, 10.5f + i*1.2f, 2.5f, 2.5f);
-        }
-
         // Draw logo.
         batch.draw(gameTitleLogo, 6.6f, 20, 16 * 1.1f, 2 * 1.1f);
 
@@ -118,11 +118,28 @@ public class StartScreen implements Screen {
             batch.draw(frame, tetrazeroX[i], tetrazeroY[i], 3, 6);
         }
 
+        // Draw restarts.
+        int rePSize = rePositions.size / 2;
+        for (int i = 0; i < rePSize; i++) {
+            // batch.draw(restartTextureRegion, 17 - i*0.3f, 10.5f + i*1.2f, 2.5f, 2.5f);
+            batch.draw(restartTextureRegion,
+                       rePositions.get(2 * i),
+                       rePositions.get(2 * i + 1),
+                       2.5f, 2.5f);
+        }
+
         batch.end();
 
-        if (Gdx.input.isTouched() || Gdx.input.isKeyPressed(Input.Keys.ANY_KEY)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.E) || Gdx.input.isKeyPressed(Input.Keys.H)) {
             // Refresh game config.
             this.game.config = new GameConfig();
+            if (Gdx.input.isKeyPressed(Input.Keys.E)) {
+                this.game.config.isEasy = true;
+                this.game.config.playerDTDefault = 0.6f;
+                this.game.config.playerDTDefaultScaling = 0.99f;
+                this.game.config.playerDT = this.game.config.playerDTDefault;
+                this.game.config.playerDTScaling = 0.99f;
+            }
             this.game.setScreen(new GameScreen(this.game));
             dispose();
         }
