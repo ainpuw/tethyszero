@@ -135,10 +135,10 @@ public class StartScreen implements Screen {
             this.game.config = new GameConfig();
             if (Gdx.input.isKeyPressed(Input.Keys.E)) {
                 this.game.config.isEasy = true;
-                this.game.config.playerDTDefault = 0.6f;
+                this.game.config.playerDTDefault = 0.45f;
                 this.game.config.playerDTDefaultScaling = 0.99f;
                 this.game.config.playerDT = this.game.config.playerDTDefault;
-                this.game.config.playerDTScaling = 0.99f;
+                this.game.config.playerDTScaling = 0.95f;
             }
             this.game.setScreen(new GameScreen(this.game));
             dispose();
